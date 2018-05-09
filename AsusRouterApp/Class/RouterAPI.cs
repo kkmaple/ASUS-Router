@@ -15,11 +15,43 @@ namespace AsusRouterApp.Class
     {
         public class Url
         {
-            public const string Host = "http://192.168.1.1/";
-            public const string Login = Host + "login.cgi";
-            public const string CpuMemInfo = Host + "cpu_ram_status.xml";
-            public const string AppGet = Host + "appGet.cgi";
-            public const string ApplyApp = Host + "applyapp.cgi";
+            public static string Host
+            {
+                get
+                {
+                    return (string)Setting.GetSetting("host", "");
+                }
+                set
+                {
+                    Setting.SetSetting("host", value);
+                }
+            }
+            public static string Login = Host + "/login.cgi";
+            public static string CpuMemInfo = Host + "/cpu_ram_status.xml";
+            public static string AppGet = Host + "/appGet.cgi";
+            public static string ApplyApp = Host + "/applyapp.cgi";
+        }
+
+        public static bool HasLogin()
+        {
+            string auth = (string)Setting.GetSetting("auth", "");
+            if (auth == null || auth.Length == 0)
+                return false;
+            else
+                return true;
+        }
+
+        public static async Task<bool> Login(string user, string pwd)
+        {
+            try
+            {
+                Setting.SetSetting("auth", Convert.ToBase64String(Encoding.UTF8.GetBytes(user + ":" + pwd)));
+                return await Login();
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         /// <summary>
@@ -28,11 +60,12 @@ namespace AsusRouterApp.Class
         /// <param name="user">用户名</param>
         /// <param name="pwd">密码</param>
         /// <returns></returns>
-        public static async Task<bool> Login(string user,string pwd)
+        public static async Task<bool> Login()
         {
             try
             {
-                var auth = Convert.ToBase64String(Encoding.UTF8.GetBytes(user + ":" + pwd));
+                string auth = (string)Setting.GetSetting("auth","");
+                if (auth == null || auth.Length == 0) return false;
                 KeyValuePair<string, string>[] header = new KeyValuePair<string, string>[1] {
                 new KeyValuePair<string, string>("Authorization","Basic "+auth)
             };

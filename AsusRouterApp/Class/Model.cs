@@ -8,6 +8,8 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using Windows.UI;
+using Windows.UI.Xaml;
+using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Media;
 using Windows.UI.Xaml.Media.Imaging;
 
@@ -419,21 +421,6 @@ namespace AsusRouterApp.Class
                     }
                 }
 
-                public Brush menuBrush
-                {
-                    get
-                    {
-                        if (Windows.Foundation.Metadata.ApiInformation.IsTypePresent("Windows.UI.Xaml.Media.XamlCompositionBrushBase"))
-                        {
-                            return Utils.UI.GetAcrylicBrush(AcrylicBackgroundSource.HostBackdrop, Color.FromArgb(255, 70, 171, 255), Color.FromArgb(255, 70, 171, 255), 0.6);
-                        }
-                        else
-                        {
-                            return new SolidColorBrush(Colors.White);
-                        }
-                    }
-                }
-
                 public void UpdateRate(DeviceRate rate)
                 {
                     this.rate = new DeviceRate()
@@ -461,8 +448,7 @@ namespace AsusRouterApp.Class
                     PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
                 }
             }
-
-
+            
             public enum NetType
             {
                 LAN,WL2G, WL5G

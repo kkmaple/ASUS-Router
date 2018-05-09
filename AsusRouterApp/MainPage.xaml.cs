@@ -1,7 +1,9 @@
 ﻿using AsusRouterApp.Class;
+using Microsoft.Toolkit.Uwp.Helpers;
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
+using System.ComponentModel;
 using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
@@ -9,6 +11,7 @@ using Windows.ApplicationModel.Core;
 using Windows.ApplicationModel.DataTransfer;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
+using Windows.Storage;
 using Windows.System.Threading;
 using Windows.UI;
 using Windows.UI.Core;
@@ -55,7 +58,7 @@ namespace AsusRouterApp
         /// <summary>
         /// Fluent Design System兼容方案
         /// </summary>
-        public class MainPageBrush
+        public class MainPageBrush : INotifyPropertyChanged
         {
             public Brush mainGrid;
             public Brush topGrid;
@@ -70,17 +73,38 @@ namespace AsusRouterApp
             public Brush cpu1StateGrid;
             public Brush cpu2StateGrid;
 
+            public Utils.UI.AccentColor accentColor;
+
             public MainPageBrush()
             {
+                accentColor = new Utils.UI.AccentColor();
+                accentColor.AccentColorChanged +=async (value) =>
+                {
+                    await DispatcherHelper.ExecuteOnUIThreadAsync(() =>
+                    {
+                        if (Windows.Foundation.Metadata.ApiInformation.IsTypePresent("Windows.UI.Xaml.Media.AcrylicBrush"))
+                        {
+                            mainGrid = Utils.UI.GetAcrylicBrush(AcrylicBackgroundSource.HostBackdrop, accentColor.accentColor, Color.FromArgb(255, 70, 171, 255), 0.3);
+                            wanInfoGrid = Utils.UI.GetAcrylicBrush(AcrylicBackgroundSource.HostBackdrop, accentColor.accentColor, Color.FromArgb(255, 70, 171, 255), 0.6);
+                        }
+                        else
+                        {
+                            wanInfoGrid = new SolidColorBrush(accentColor.accentColor);
+                        }
+                        RaisePropertyChanged("mainGrid");
+                        RaisePropertyChanged("wanInfoGrid");
+                    });
+                };
+                
                 if (Windows.Foundation.Metadata.ApiInformation.IsTypePresent("Windows.UI.Xaml.Media.AcrylicBrush"))
                 {
                     //整个页面采用FDS
-                    mainGrid = Utils.UI.GetAcrylicBrush(AcrylicBackgroundSource.HostBackdrop, Color.FromArgb(255, 70, 171, 255), Color.FromArgb(255, 70, 171, 255),0.3);
+                    mainGrid = Utils.UI.GetAcrylicBrush(AcrylicBackgroundSource.HostBackdrop, accentColor.accentColor, Color.FromArgb(255, 70, 171, 255),0.3);
                     //顶部栏跟随FDS
                     topGrid = new SolidColorBrush(Colors.Transparent);
                     menuGrid = new SolidColorBrush(Colors.Transparent);
                     //主页色块
-                    wanInfoGrid = Utils.UI.GetAcrylicBrush(AcrylicBackgroundSource.HostBackdrop, Color.FromArgb(255, 70, 171, 255), Color.FromArgb(255, 70, 171, 255), 0.6);
+                    wanInfoGrid = Utils.UI.GetAcrylicBrush(AcrylicBackgroundSource.HostBackdrop, accentColor.accentColor, Color.FromArgb(255, 70, 171, 255), 0.6);
                     rateInfoGrid1 = Utils.UI.GetAcrylicBrush(AcrylicBackgroundSource.HostBackdrop, Color.FromArgb(255, 37,180,128), Color.FromArgb(255, 37, 180, 128), 0.6);
                     rateInfoGrid2 = Utils.UI.GetAcrylicBrush(AcrylicBackgroundSource.HostBackdrop, Color.FromArgb(255, 127, 87, 197), Color.FromArgb(255, 127, 87, 197), 0.6);
                     rateInfoGrid3 = Utils.UI.GetAcrylicBrush(AcrylicBackgroundSource.HostBackdrop, Color.FromArgb(255, 107, 197, 87), Color.FromArgb(255, 107, 197, 87), 0.6);
@@ -97,7 +121,7 @@ namespace AsusRouterApp
                     topGrid = new SolidColorBrush(Colors.Transparent);
                     menuGrid = new SolidColorBrush(Colors.Transparent);
                     //主页色块
-                    wanInfoGrid = new SolidColorBrush(Color.FromArgb(255, 70, 171, 255));
+                    wanInfoGrid = new SolidColorBrush(accentColor.accentColor);
                     rateInfoGrid1 = new SolidColorBrush(Color.FromArgb(255, 37, 180, 128));
                     rateInfoGrid2 = new SolidColorBrush(Color.FromArgb(255, 127, 87, 197));
                     rateInfoGrid3 = new SolidColorBrush(Color.FromArgb(255, 107, 197, 87));
@@ -106,6 +130,12 @@ namespace AsusRouterApp
                     cpu1StateGrid = new SolidColorBrush(Color.FromArgb(255, 37, 95, 180));
                     cpu2StateGrid = new SolidColorBrush(Color.FromArgb(255, 180, 37, 174));
                 }
+            }
+
+            public event PropertyChangedEventHandler PropertyChanged;
+            public void RaisePropertyChanged(string name)
+            {
+                PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(name));
             }
         }
 
@@ -120,11 +150,6 @@ namespace AsusRouterApp
         /// </summary>
         private void UI_Init()
         {
-            //标题栏
-            CoreApplication.GetCurrentView().TitleBar.ExtendViewIntoTitleBar = true;
-            ApplicationViewTitleBar titleBar = ApplicationView.GetForCurrentView().TitleBar;
-            titleBar.ButtonBackgroundColor = Colors.Transparent;
-            titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
             //数据加载前隐藏UI
             grid_waninfo.Visibility = Visibility.Collapsed;
             grid_netrate.Visibility = Visibility.Collapsed;
@@ -134,12 +159,11 @@ namespace AsusRouterApp
             if (App.ContactStart) topGrid.Visibility = Visibility.Collapsed;
         }
 
-        protected async override void OnNavigatedTo(NavigationEventArgs e)
+        protected override void OnNavigatedTo(NavigationEventArgs e)
         {
             if(e.NavigationMode==NavigationMode.New)
             {
-                var res=await RouterAPI.Login("wwb123123", "www.123123");
-                if(res)InitUpdateTheard();
+                InitUpdateTheard();
             }
         }
 
@@ -461,22 +485,6 @@ namespace AsusRouterApp
             pivotView.SelectedIndex = 3;
         }
 
-        private void ClientListSelectionChanged(object sender, SelectionChangedEventArgs e)
-        {
-            var listview = sender as ListView;
-            if(listview.SelectedIndex>=0)
-            {
-                /*
-                var client = listview.SelectedItem as Model.Client.ClientInfo;
-                var res = await RouterAPI.FireWall.SetBan(client.mac);
-                if (res)
-                    notificationError.Show("Success");
-                else
-                    notificationError.Show("Error");
-                */
-            }
-        }
-
         private async void ClientMenuFlyoutClick(object sender, RoutedEventArgs e)
         {
             var menu = sender as MenuFlyoutItem;
@@ -496,7 +504,12 @@ namespace AsusRouterApp
                     notification.Show("已复制到粘贴板", 2000);
                     break;
                 case 2:
-                    
+                    var dialog = new Control.ClientDialog(client);
+                    var dialogRes = await dialog.ShowAsync();
+                    if (dialogRes == ContentDialogResult.Primary)
+                    {
+                        clientGroup = null;
+                    }
                     break;
                 case 3:
                     var res = await RouterAPI.FireWall.SetBan(client.mac);
@@ -510,6 +523,71 @@ namespace AsusRouterApp
                     break;
                 default:
                     break;
+            }
+        }
+
+        /// <summary>
+        /// 注销
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private void LoginOutBtn_Click(object sender, RoutedEventArgs e)
+        {
+            RouterAPI.Url.Host = "";
+            Setting.SetSetting("auth", "");
+            this.Frame.Navigate(typeof(LoginPage), null);
+        }
+
+        /// <summary>
+        /// 导出数据
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private async void ExportDataBtn_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var json = Setting.Data.Export();
+                var savePicker = new Windows.Storage.Pickers.FileSavePicker();
+                savePicker.SuggestedStartLocation = Windows.Storage.Pickers.PickerLocationId.Desktop;
+                savePicker.FileTypeChoices.Add("Json", new List<string>() { ".json" });
+                savePicker.SuggestedFileName = "Asus Route Data";
+                var file = await savePicker.PickSaveFileAsync();
+                if (file != null)
+                {
+                    await FileIO.WriteTextAsync(file, json);
+                    notification.Show("数据导出成功", 1000);
+                }
+            }
+            catch (Exception)
+            {
+                notificationError.Show("数据导出错误");
+            }
+        }
+
+        /// <summary>
+        /// 导入数据
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
+        private async void LoadDataBtn_Click(object sender, RoutedEventArgs e)
+        {
+            try
+            {
+                var openPicker = new Windows.Storage.Pickers.FileOpenPicker();
+                openPicker.FileTypeFilter.Add(".json");
+                var file = await openPicker.PickSingleFileAsync();
+                if (file != null)
+                {
+                    string json = await FileIO.ReadTextAsync(file);
+                    Setting.Data.Load(json);
+                    notification.Show("数据导入成功", 1000);
+                    clientGroup = null;
+                }
+            }
+            catch (Exception)
+            {
+                notificationError.Show("数据导入错误");
             }
         }
     }

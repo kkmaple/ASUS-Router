@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -29,8 +30,74 @@ namespace AsusRouterApp.Class
             }
         }
 
+        public class Data
+        {
+            /// <summary>
+            /// 导出数据
+            /// </summary>
+            /// <returns></returns>
+            public static string Export()
+            {
+                var res = new DataModel();
+                res.devName = DeviceName.GetDeviceName();
+                res.devType = DeviceType.GetDeviceType();
+                return JsonConvert.SerializeObject(res);
+            }
+
+            /// <summary>
+            /// 导入数据
+            /// </summary>
+            /// <param name="json"></param>
+            public static void Load(string json)
+            {
+                try
+                {
+                    DataModel data = JsonConvert.DeserializeObject<DataModel>(json);
+                    if(data.devName!=null)
+                    {
+                        foreach (var mac in data.devName.Keys)
+                        {
+                            DeviceName.SetDeviceName(mac, data.devName[mac]);
+                        }
+                    }
+                    if (data.devType != null)
+                    {
+                        foreach (var mac in data.devType.Keys)
+                        {
+                            DeviceType.SetDeviceType(mac, (Model.DeviceType)data.devType[mac]);
+                        }
+                    }
+                }
+                catch (Exception)
+                {
+                    
+                }
+            }
+
+            public class DataModel
+            {
+                public Dictionary<string, string> devName { get; set; }
+                public Dictionary<string, int> devType { get; set; }
+            }
+        }
+
         public class DeviceName
         {
+            public static Dictionary<string,string> GetDeviceName()
+            {
+                ApplicationDataContainer deviceNamesContainers = null;
+                if (!localSetting.Containers.ContainsKey("decviceNames"))
+                    localSetting.CreateContainer("decviceNames", ApplicationDataCreateDisposition.Always);
+                else
+                    deviceNamesContainers = localSetting.Containers["decviceNames"];
+                var res = new Dictionary<string, string>();
+                foreach (var item in deviceNamesContainers.Values.Keys)
+                {
+                    res.Add(item, (string)deviceNamesContainers.Values[item]);
+                }
+                return res;
+            }
+
             public static string GetDeviceName(string mac, string def)
             {
                 ApplicationDataContainer deviceNamesContainers = null;
@@ -72,6 +139,21 @@ namespace AsusRouterApp.Class
 
         public class DeviceType
         {
+            public static Dictionary<string, int> GetDeviceType()
+            {
+                ApplicationDataContainer deviceNamesContainers = null;
+                if (!localSetting.Containers.ContainsKey("decviceType"))
+                    localSetting.CreateContainer("decviceType", ApplicationDataCreateDisposition.Always);
+                else
+                    deviceNamesContainers = localSetting.Containers["decviceType"];
+                var res = new Dictionary<string, int>();
+                foreach (var item in deviceNamesContainers.Values.Keys)
+                {
+                    res.Add(item, (int)deviceNamesContainers.Values[item]);
+                }
+                return res;
+            }
+
             public static Model.DeviceType GetDeviceType(string mac, Model.DeviceType def)
             {
                 ApplicationDataContainer deviceTypeContainers = null;

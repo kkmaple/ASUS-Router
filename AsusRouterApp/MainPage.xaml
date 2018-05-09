@@ -365,7 +365,7 @@
                         <MenuFlyoutItem TabIndex="1" Tag="{Binding}" Click="ClientMenuFlyoutClick" Text="{Binding mac}"/>
                         <MenuFlyoutItem TabIndex="2" Tag="{Binding}" Click="ClientMenuFlyoutClick" Text="编辑"/>
                         <MenuFlyoutItem TabIndex="3" Tag="{Binding}" Click="ClientMenuFlyoutClick" Text="允许/禁用 互联网访问"/>
-                        <MenuFlyoutItem TabIndex="4" Tag="{Binding}" Click="ClientMenuFlyoutClick" Text="带宽限定"/>
+                        <MenuFlyoutItem Visibility="Collapsed" TabIndex="4" Tag="{Binding}" Click="ClientMenuFlyoutClick" Text="带宽限定"/>
                     </MenuFlyout>
                 </Button.Flyout>
                 <Grid>
@@ -374,7 +374,7 @@
                         <ColumnDefinition/>
                     </Grid.ColumnDefinitions>
                     <Ellipse Grid.Column="0" Width="60" Height="60" Margin="5" Fill="{ThemeResource MainThemeColor}"/>
-                    <Image Grid.Column="0" Width="60" Height="60" Margin="5" Source="{Binding devTypeImage}"/>
+                    <Image x:Name="ItemThumbnail" Grid.Column="0" Width="60" Height="60" Margin="5" Source="{Binding devTypeImage}"/>
                     <Grid Grid.Column="1">
                         <Grid.RowDefinitions>
                             <RowDefinition/>
@@ -463,6 +463,13 @@
         </Grid.RowDefinitions>
         <Grid x:Name="topGrid" Margin="0,45,0,0" Background="{x:Bind brushMainPage.topGrid,Mode=TwoWay}" Grid.Row="0" Height="50" VerticalAlignment="Top">
             <Button x:Name="menuopenBtn" Width="50" Height="50" Background="{x:Null}" VerticalAlignment="Bottom">
+                <Button.Flyout>
+                    <MenuFlyout Placement="Bottom">
+                        <MenuFlyoutItem Click="LoadDataBtn_Click" Text="导入数据"/>
+                        <MenuFlyoutItem Click="ExportDataBtn_Click" Text="导出数据"/>
+                        <MenuFlyoutItem Click="LoginOutBtn_Click" Text="注销"/>
+                    </MenuFlyout>
+                </Button.Flyout>
                 <FontIcon Foreground="{ThemeResource TextColor}" Margin="-10,-6" Width="50" Height="50" FontFamily="Segoe MDL2 Assets" Glyph="&#xE700;"/>
             </Button>
             <TextBlock x:Name="textBlock_title" Text="ASUS Router" Margin="60,0,0,0" Foreground="{ThemeResource TextColor}" FontSize="18" HorizontalAlignment="Left" VerticalAlignment="Center"></TextBlock>
@@ -676,7 +683,7 @@
                 <PivotItem>
                     <SemanticZoom Margin="-10,0,-10,0">
                         <SemanticZoom.ZoomedInView>
-                            <ListView x:Name="ZoomInView" SelectionMode="None" SelectionChanged="ClientListSelectionChanged" Margin="15,0,15,0" ItemTemplate="{StaticResource ClientItemStyle}">
+                            <ListView x:Name="ZoomInView" SelectionMode="None" Margin="15,0,15,0" ItemTemplate="{StaticResource ClientItemStyle}">
                                 <ListView.ItemContainerStyle>
                                     <Style TargetType="ListViewItem">
                                         <Setter Property="HorizontalContentAlignment" Value="Stretch"/>

@@ -5,9 +5,11 @@ using System.Linq;
 using System.Runtime.InteropServices.WindowsRuntime;
 using Windows.ApplicationModel;
 using Windows.ApplicationModel.Activation;
+using Windows.ApplicationModel.Core;
 using Windows.Foundation;
 using Windows.Foundation.Collections;
 using Windows.UI;
+using Windows.UI.ViewManagement;
 using Windows.UI.Xaml;
 using Windows.UI.Xaml.Controls;
 using Windows.UI.Xaml.Controls.Primitives;
@@ -40,7 +42,7 @@ namespace AsusRouterApp
         /// 将在启动应用程序以打开特定文件等情况下使用。
         /// </summary>
         /// <param name="e">有关启动请求和过程的详细信息。</param>
-        protected override void OnLaunched(LaunchActivatedEventArgs e)
+        protected override async void OnLaunched(LaunchActivatedEventArgs e)
         {
             Frame rootFrame = Window.Current.Content as Frame;
 
@@ -70,14 +72,25 @@ namespace AsusRouterApp
                     // 并通过将所需信息作为导航参数传入来配置
                     // 参数
                     ApplyColorToTitleBar();
-                    rootFrame.Navigate(typeof(MainPage), e.Arguments);
+                    if (Class.RouterAPI.HasLogin())
+                    {
+                        var loginRes = await Class.RouterAPI.Login();
+                        if (loginRes)
+                            rootFrame.Navigate(typeof(MainPage), e);
+                        else
+                            rootFrame.Navigate(typeof(LoginPage), e);
+                    }
+                    else
+                    {
+                        rootFrame.Navigate(typeof(LoginPage), e);
+                    }
                 }
                 // 确保当前窗口处于活动状态
                 Window.Current.Activate();
             }
         }
 
-        override protected void OnActivated(IActivatedEventArgs e)
+        override protected async void OnActivated(IActivatedEventArgs e)
         {
             if (e.Kind == ActivationKind.ContactPanel)
             {
@@ -88,9 +101,20 @@ namespace AsusRouterApp
 
                 // Place the frame in the current Window
                 Window.Current.Content = rootFrame;
-
+                if(Class.RouterAPI.HasLogin())
+                {
+                    var loginRes = await Class.RouterAPI.Login();
+                    if(loginRes)
+                        rootFrame.Navigate(typeof(MainPage), e);
+                    else
+                        rootFrame.Navigate(typeof(LoginPage), e);
+                }
+                else
+                {
+                    rootFrame.Navigate(typeof(LoginPage), e);
+                }
                 // Navigate to the page that shows the Contact UI.
-                rootFrame.Navigate(typeof(MainPage), e);
+                
 
                 // Ensure the current window is active
                 Window.Current.Activate();
@@ -123,17 +147,11 @@ namespace AsusRouterApp
 
         private void ApplyColorToTitleBar()
         {
-            Edi.UWP.Helpers.UI.ApplyColorToTitleBar(
-                Color.FromArgb(255, 70, 171, 255),
-                Colors.White,
-                Colors.LightGray,
-                Colors.Gray);
-
-            Edi.UWP.Helpers.UI.ApplyColorToTitleButton(
-                Color.FromArgb(255, 70, 171, 255), Colors.White,
-                Color.FromArgb(255, 70, 171, 255), Colors.White,
-                Color.FromArgb(255, 70, 171, 255), Colors.White,
-                Colors.LightGray, Colors.Gray);
+            //标题栏
+            CoreApplication.GetCurrentView().TitleBar.ExtendViewIntoTitleBar = true;
+            ApplicationViewTitleBar titleBar = ApplicationView.GetForCurrentView().TitleBar;
+            titleBar.ButtonBackgroundColor = Colors.Transparent;
+            titleBar.ButtonInactiveBackgroundColor = Colors.Transparent;
         }
     }
 }

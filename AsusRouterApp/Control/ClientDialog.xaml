@@ -6,12 +6,59 @@
     xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
     xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
     mc:Ignorable="d"
-    Title="TITLE"
-    PrimaryButtonText="Button1"
-    SecondaryButtonText="Button2"
+    Background="{x:Bind dialogBrush.mainGrid}"
+    PrimaryButtonText="保存"
+    SecondaryButtonText="取消"
     PrimaryButtonClick="ContentDialog_PrimaryButtonClick"
-    SecondaryButtonClick="ContentDialog_SecondaryButtonClick">
+    SecondaryButtonClick="ContentDialog_SecondaryButtonClick" Opened="ContentDialog_Opened">
+    <ContentDialog.PrimaryButtonStyle>
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="{ThemeResource MainThemeColor}"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+    </ContentDialog.PrimaryButtonStyle>
 
-    <Grid>
-    </Grid>
+    <ContentDialog.SecondaryButtonStyle>
+        <Style TargetType="Button">
+            <Setter Property="Background" Value="OrangeRed"/>
+            <Setter Property="Foreground" Value="White"/>
+        </Style>
+    </ContentDialog.SecondaryButtonStyle>
+
+    <ListView SelectionMode="None">
+        <ListView.ItemContainerStyle>
+            <Style TargetType="ListViewItem">
+                <Setter Property="HorizontalContentAlignment" Value="Stretch"/>
+                <Setter Property="Margin" Value="0,0,0,3"/>
+                <Setter Property="BorderThickness" Value="0,0,0,1"/>
+                <Setter Property="BorderBrush" Value="Gray"/>
+            </Style>
+        </ListView.ItemContainerStyle>
+        <ListViewItem>
+            <Grid>
+                <TextBlock Text="名称" Foreground="{x:Bind dialogBrush.textBrush}" FontWeight="Bold" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                <TextBox Foreground="{x:Bind dialogBrush.textBrush}" HorizontalAlignment="Right" Width="150" Text="{x:Bind client.name,Mode=TwoWay}"/>
+            </Grid>
+        </ListViewItem>
+        <ListViewItem>
+            <Grid>
+                <TextBlock Text="设备类型" Foreground="{x:Bind dialogBrush.textBrush}" FontWeight="Bold" HorizontalAlignment="Left" VerticalAlignment="Center"/>
+                <ComboBox x:Name="comboBox" Foreground="{x:Bind dialogBrush.textBrush}" HorizontalAlignment="Right" Width="150" ItemsSource="{x:Bind typeModels}" SelectionChanged="comboBox_SelectionChanged">
+                    <ComboBox.ItemTemplate>
+                        <DataTemplate>
+                            <Grid>
+                                <Grid.ColumnDefinitions>
+                                    <ColumnDefinition Width="auto"/>
+                                    <ColumnDefinition/>
+                                </Grid.ColumnDefinitions>
+                                <Ellipse Grid.Column="0" Width="30" Height="30" Margin="5" Fill="{ThemeResource MainThemeColor}"/>
+                                <Image x:Name="ItemThumbnail" Grid.Column="0" Width="30" Height="30" Margin="5" Source="{Binding image}"/>
+                                <TextBlock Grid.Column="1" Text="{Binding name}" HorizontalAlignment="Left" VerticalAlignment="Center" TextWrapping="WrapWholeWords"/>
+                            </Grid>
+                        </DataTemplate>
+                    </ComboBox.ItemTemplate>
+                </ComboBox>
+            </Grid>
+        </ListViewItem>
+    </ListView>
 </ContentDialog>
